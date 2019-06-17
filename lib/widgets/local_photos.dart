@@ -1,5 +1,10 @@
+import 'dart:math' show pi;
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:photo_manager/photo_manager.dart';
+
+import 'package:photo_gallery/models/photo_model.dart';
+import 'package:photo_gallery/utils/sqlite.dart';
 
 class LocalPhotos extends StatefulWidget {
   @override
@@ -14,6 +19,31 @@ class _LocalPhotos extends State<LocalPhotos> {
   int tabControllerLength;
   List<Widget> tabBarLabels = [];
   List<Widget> tabBarContents = [];
+
+  void createData(Photo photo) {
+    final DbHelper dbHelper = DbHelper();
+    dbHelper.createPhoto(photo);
+  }
+
+  void updateData(Photo photo) {
+    final DbHelper dbHelper = DbHelper();
+    dbHelper.updatePhoto(photo);
+  }
+
+  void deleteData(String path) {
+    final DbHelper dbHelper = DbHelper();
+    dbHelper.deletePhoto(path);
+  }
+
+  Future<Photo> readData(String path) async {
+    final DbHelper dbHelper = DbHelper();
+    return await dbHelper.readPhoto(path);
+  }
+
+  Future<List<Photo>> readAllData() async {
+    final DbHelper dbHelper = DbHelper();
+    return await dbHelper.readAllPhotos();
+  }
 
   @override
   void initState() {
@@ -33,42 +63,38 @@ class _LocalPhotos extends State<LocalPhotos> {
       final List<AssetPathEntity> assetPathList =
           await PhotoManager.getAssetPathList(isCache: false, hasVideo: false);
 
-      print('assetPathList');
-      print(assetPathList);
-
-      // this is an alternative way to look for assets paths
-      // final List<AssetPathEntity> imageAsset =
-      //     await PhotoManager.getImageAsset();
-      // print('imageAsset');
-      // print(imageAsset);
-
       // for each asset path we fetch the list of all the images and we add to the global list
       for (int i = 0; i < assetPathList.length; i++) {
-        // gets the list of all the images for the asset path
-        final List<AssetEntity> newImageList = await assetPathList[i].assetList;
+        List<AssetEntity> newImageList = <AssetEntity>[];
+        final String name = assetPathList[i].name.toLowerCase();
+        // we skip the whole process if the "recent" path
+        if (name != 'recent') {
+          // gets the list of all the images for the asset path
+          final DateTime now = DateTime.now();
+          newImageList = await assetPathList[i].assetList;
 
-        print(assetPathList[i].name + ' - ' + newImageList.length.toString());
+          print(
+              '$name: ${newImageList.length.toString()} photos loaded in ${(DateTime.now().difference(now)).toString()}');
 
-        // adds every image to the global list
-        if (newImageList.length > 0 &&
-            assetPathList[i].name.toLowerCase() != 'recent') {
-          List<AssetEntity> imageList = <AssetEntity>[];
-          for (int ii = 0; ii < newImageList.length; ii++) {
-            imageList.add(newImageList[ii]);
+          // adds every image to the global list
+          if (newImageList.isNotEmpty && name != 'recent') {
+            // adds the list to the sqlite database
+            // await insertList(name, newImageList.toString());
+            // dynamic sqliteList = await readList(name);
+
+            tabBarLabels.add(Tab(text: assetPathList[i].name));
+            tabBarContents.add(GridView.builder(
+              // gridview
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: numberOfImagesPerRow,
+                childAspectRatio: 1.0,
+              ),
+              itemBuilder: (BuildContext context, int index) {
+                return _buildItem(context, index, newImageList);
+              },
+              itemCount: newImageList.length,
+            ));
           }
-
-          tabBarLabels.add(Tab(text: assetPathList[i].name));
-          tabBarContents.add(GridView.builder(
-            // gridview
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: numberOfImagesPerRow,
-              childAspectRatio: 1.0,
-            ),
-            itemBuilder: (BuildContext context, int index) {
-              return _buildItem(context, index, imageList);
-            },
-            itemCount: imageList.length,
-          ));
         }
       }
       // updates the state to update the screen
@@ -76,9 +102,9 @@ class _LocalPhotos extends State<LocalPhotos> {
 
       tabControllerLength = tabBarLabels.length;
 
-      print('Len 1: $tabControllerLength');
-      print('Len 2: ${tabBarLabels.length}');
-      print('Len 3: ${tabBarContents.length}');
+      // print('tabControllerLength: $tabControllerLength');
+      // print('tabBarLabels: ${tabBarLabels.length}');
+      // print('tabBarContents: ${tabBarContents.length}');
 
       setState(() {});
     } else {
@@ -89,7 +115,8 @@ class _LocalPhotos extends State<LocalPhotos> {
   }
 
   // creates the single tile with the image
-  Widget _buildItem(BuildContext context, int index, currentImageList) {
+  Widget _buildItem(
+      BuildContext context, int index, List<AssetEntity> currentImageList) {
     final AssetEntity entity = currentImageList[index]; // image entity
 
     final int size = MediaQuery.of(context).size.width ~/
@@ -102,11 +129,36 @@ class _LocalPhotos extends State<LocalPhotos> {
             snapshot.data != null) {
           return InkWell(
             onTap: () => print(entity),
-            child: Image.memory(
-              snapshot.data,
-              fit: BoxFit.cover,
-              width: size.toDouble(),
-              height: size.toDouble(),
+            child: Stack(
+              alignment: const Alignment(1.0, -1.0),
+              overflow: Overflow.clip,
+              children: <Widget>[
+                Image.memory(
+                  snapshot.data,
+                  fit: BoxFit.cover,
+                  width: size.toDouble(),
+                  height: size.toDouble(),
+                ),
+                Positioned(
+                  top: -50.0,
+                  right: -50.0,
+                  child: Transform.rotate(
+                    angle: pi / 4.0,
+                    child: Container(
+                      alignment: Alignment.bottomCenter,
+                      width: 100,
+                      height: 100,
+                      padding: EdgeInsets.only(bottom: 5.0),
+                      color: Colors.red,
+                      child: Text(
+                        'Low\nquality',
+                        style: TextStyle(color: Colors.white),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ),
+                )
+              ],
             ),
           );
         }
