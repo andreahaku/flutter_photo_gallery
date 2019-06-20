@@ -4,49 +4,6 @@ import 'package:path/path.dart';
 import 'package:photo_gallery/models/photo_model.dart';
 import 'package:sqflite/sqflite.dart';
 
-// Future<Database> openDB() async {
-//   // Get a location using getDatabasesPath
-//   final String databasesPath = await getDatabasesPath();
-//   final String path = join(databasesPath, 'demo.db');
-
-//   // Delete the database
-//   await deleteDatabase(path);
-
-//   // open the database
-//   return await openDatabase(path, version: 1,
-//       onCreate: (Database db, int version) async {
-//     // When creating the db, create the table
-//     await db.execute(
-//         'CREATE TABLE photos (id INTEGER PRIMARY KEY, directory TEXT, list BLOB)');
-//   });
-// }
-
-// Future<void> insertList(String directory, dynamic list) async {
-//   // Get a reference to the database.
-//   final Database db = await openDB();
-
-//   final Map<String, dynamic> data = <String, dynamic>{
-//     'directory': directory,
-//     'list': list,
-//   };
-
-//   await db.insert(
-//     'photos',
-//     data,
-//     conflictAlgorithm: ConflictAlgorithm.replace,
-//   );
-// }
-
-// Future<dynamic> readList(String diretory) async {
-//   // Get a reference to the database.
-//   final Database db = await openDB();
-
-//   dynamic allPhoto = await db.rawQuery(
-//       'SELECT * FROM photos WHERE directory = ?', <dynamic>[diretory]);
-
-//   return allPhoto[0]['list'].split(',');
-// }
-
 class DbHelper {
   Database _db;
 
@@ -64,7 +21,7 @@ class DbHelper {
   // creates the table
   void onCreate(Database db, int version) async {
     await db.execute(
-        'CREATE TABLE photos (id INTEGER PRIMARY KEY, directory TEXT, path TEXT, height DOUBLE, width DOUBLE, thumbnail BLOB)');
+        'CREATE TABLE photos (id INTEGER PRIMARY KEY, library TEXT, directory TEXT, path TEXT, height DOUBLE, width DOUBLE, thumbnail BLOB)');
   }
 
   // returns the db. if it doesn't exists it initialises one
@@ -77,7 +34,7 @@ class DbHelper {
     final Database dbReady = await db;
 
     return await dbReady.rawInsert(
-      "INSERT INTO photos(directory, path, height, width, thumbnail) VALUES ('${photo.directory}','${photo.height}','${photo.width}','${photo.thumbnail}')",
+      "INSERT INTO photos(library, directory, path, height, width, thumbnail) VALUES ('${photo.library}','${photo.directory}','${photo.path}','${photo.height}','${photo.width}','${photo.thumbnail}')",
     );
   }
 
@@ -86,7 +43,7 @@ class DbHelper {
     final Database dbReady = await db;
 
     return await dbReady.rawInsert(
-      "UPDATE photos SET directory = '${photo.directory}', path = '${photo.path}', height = '${photo.height}', width= '${photo.width}', thumbnail = '${photo.thumbnail}' WHERE path = '${photo.path}'",
+      "UPDATE photos SET library = '${photo.library}', directory = '${photo.directory}', path = '${photo.path}', height = '${photo.height}', width= '${photo.width}', thumbnail = '${photo.thumbnail}' WHERE path = '${photo.path}'",
     );
   }
 
@@ -122,6 +79,7 @@ class DbHelper {
       final Map<String, dynamic> photo = list[i];
 
       allPhotos.add(Photo(
+        photo['library'],
         photo['directory'],
         photo['path'],
         photo['height'],
