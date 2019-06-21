@@ -38,6 +38,26 @@ class DbHelper {
     );
   }
 
+  // adds a photo to the table
+  Future<void> batchCreatePhoto(List<Photo> photos) async {
+    final Database dbReady = await db;
+    Batch batch = dbReady.batch();
+
+    for (int i = 0; i < photos.length; i++) {
+      Photo photo = photos[i];
+
+      batch.insert('photos', {
+        'library': photo.library,
+        'directory': photo.directory,
+        'path': photo.path,
+        'height': photo.height,
+        'width': photo.width,
+      });
+    }
+
+    await batch.commit(noResult: true, continueOnError: true);
+  }
+
   // updates a photo in the table based on the path of it
   Future<int> updatePhoto(Photo photo) async {
     final Database dbReady = await db;

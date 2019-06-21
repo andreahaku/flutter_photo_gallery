@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'dart:math' show pi;
-import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:photo_manager/photo_manager.dart';
 
@@ -20,31 +19,6 @@ class _LocalPhotos extends State<LocalPhotos> {
   int tabControllerLength;
   List<Widget> tabBarLabels = [];
   List<Widget> tabBarContents = [];
-
-  void createData(Photo photo) {
-    final DbHelper dbHelper = DbHelper();
-    dbHelper.createPhoto(photo);
-  }
-
-  void updateData(Photo photo) {
-    final DbHelper dbHelper = DbHelper();
-    dbHelper.updatePhoto(photo);
-  }
-
-  void deleteData(String path) {
-    final DbHelper dbHelper = DbHelper();
-    dbHelper.deletePhoto(path);
-  }
-
-  Future<Photo> readData(String path) async {
-    final DbHelper dbHelper = DbHelper();
-    return await dbHelper.readPhoto(path);
-  }
-
-  Future<List<Photo>> readAllData() async {
-    final DbHelper dbHelper = DbHelper();
-    return await dbHelper.readAllPhotos();
-  }
 
   @override
   void initState() {
