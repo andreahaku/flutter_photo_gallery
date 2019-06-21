@@ -79,11 +79,7 @@ class _LocalPhotos extends State<LocalPhotos> {
 
           // adds every image to the global list
           if (newImageList.isNotEmpty && name != 'recent') {
-            // adds the list to the sqlite database
-            // await insertList(name, newImageList.toString());
-            // dynamic sqliteList = await readList(name);
-
-            await _storeAllImages(name, newImageList, 250);
+            await _storeAllImages(name, newImageList);
 
             tabBarLabels.add(Tab(text: assetPathList[i].name));
             tabBarContents.add(GridView.builder(
@@ -121,13 +117,8 @@ class _LocalPhotos extends State<LocalPhotos> {
   Future<void> _storeAllImages(
     String directory,
     List<AssetEntity> imageList,
-    int thumbSize,
   ) async {
-    final DateTime mainNow = DateTime.now();
-
     for (int i = 0; i < imageList.length; i++) {
-      final DateTime photoNow = DateTime.now();
-
       final AssetEntity photo = imageList[i];
 
       final File file = await photo.file;
@@ -135,9 +126,6 @@ class _LocalPhotos extends State<LocalPhotos> {
       final Size size = await photo.size;
       final double width = size.width;
       final double height = size.height;
-      // final Uint8List thumbnail = null; // if you want to test without 'thumbnail'
-      final Uint8List thumbnail =
-          await photo.thumbDataWithSize(thumbSize, thumbSize);
 
       final Photo item = Photo(
         directory,
@@ -145,16 +133,10 @@ class _LocalPhotos extends State<LocalPhotos> {
         path,
         height,
         width,
-        thumbnail,
       );
 
       final int number = await DbHelper().createPhoto(item);
-
-      print(
-          'ADDED PHOTO ID: $number in ${(DateTime.now().difference(photoNow)).toString()}');
     }
-    print(
-        'ALL DIRECTORY PHOTOS ADDED in ${(DateTime.now().difference(mainNow)).toString()}');
   }
 
   // creates the single tile with the image

@@ -21,7 +21,7 @@ class DbHelper {
   // creates the table
   void onCreate(Database db, int version) async {
     await db.execute(
-        'CREATE TABLE photos (id INTEGER PRIMARY KEY, library TEXT, directory TEXT, path TEXT, height DOUBLE, width DOUBLE, thumbnail BLOB)');
+        'CREATE TABLE photos (id INTEGER PRIMARY KEY, library TEXT, directory TEXT, path TEXT, height DOUBLE, width DOUBLE)');
   }
 
   // returns the db. if it doesn't exists it initialises one
@@ -34,7 +34,7 @@ class DbHelper {
     final Database dbReady = await db;
 
     return await dbReady.rawInsert(
-      "INSERT INTO photos(library, directory, path, height, width, thumbnail) VALUES ('${photo.library}','${photo.directory}','${photo.path}','${photo.height}','${photo.width}','${photo.thumbnail}')",
+      "INSERT INTO photos(library, directory, path, height, width, thumbnail) VALUES ('${photo.library}','${photo.directory}','${photo.path}','${photo.height}','${photo.width}'')",
     );
   }
 
@@ -43,7 +43,7 @@ class DbHelper {
     final Database dbReady = await db;
 
     return await dbReady.rawInsert(
-      "UPDATE photos SET library = '${photo.library}', directory = '${photo.directory}', path = '${photo.path}', height = '${photo.height}', width= '${photo.width}', thumbnail = '${photo.thumbnail}' WHERE path = '${photo.path}'",
+      "UPDATE photos SET library = '${photo.library}', directory = '${photo.directory}', path = '${photo.path}', height = '${photo.height}', width= '${photo.width}' WHERE path = '${photo.path}'",
     );
   }
 
@@ -84,7 +84,6 @@ class DbHelper {
         photo['path'],
         photo['height'],
         photo['width'],
-        photo['thumbnail'],
       ));
     }
 
